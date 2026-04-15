@@ -5,7 +5,7 @@ resource "aws_launch_template" "web_lt" {
   name = "web-launch-template"
 
   image_id      = data.aws_ssm_parameter.al2023.value
-  instance_type = "t3.micro"
+  instance_type = "t2.micro"
 
   vpc_security_group_ids = [
     aws_security_group.ec2_sg.id
