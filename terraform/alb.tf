@@ -8,7 +8,7 @@ resource "aws_lb" "alb" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
 
-# ALB を配置するサブネット（public 1a / 1c）
+  # ALB を配置するサブネット（public 1a / 1c）
   subnets = [
     aws_subnet.public_subnet_1a.id,
     aws_subnet.public_subnet_1c.id
