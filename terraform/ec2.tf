@@ -17,54 +17,44 @@ resource "aws_launch_template" "web_lt" {
 
   user_data = base64encode(<<EOF
 #!/bin/bash
+set -eux
+
+# --- 基本アップデート ---
 dnf update -y
-dnf install -y nginx -y
+
+# --- nginx インストール ---
+dnf install -y nginx
 systemctl enable nginx
 systemctl start nginx
 
+# --- stress-ng をインストール（AL2023 用 正しい手順） ---
+dnf install -y epel-release
+dnf install -y stress-ng
+
+# --- CPU を常時ぶん回す（2コア）---
+stress-ng --cpu 2 --timeout 0 &
+
+# --- Web ページ配置 ---
 cat <<'HTML' > /usr/share/nginx/html/index.html
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
   <meta charset="UTF-8">
   <title>My Web Server</title>
   <style>
-    body {
-      background: #f5f5f5;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding-top: 80px;
-    }
-
-    h1 {
-      color: #333;
-      font-size: 40px;
-    }
-
-    p {
-      color: #666;
-      font-size: 18px;
-    }
-
-    .box {
-      background: white;
-      padding: 40px;
-      margin: auto;
-      width: 60%;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #ccc;
-    }
+    body { background: #f5f5f5; font-family: Arial; text-align: center; padding-top: 80px; }
+    h1 { color: #333; font-size: 40px; }
+    p { color: #666; font-size: 18px; }
+    .box { background: white; padding: 40px; margin: auto; width: 60%; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
   </style>
 </head>
-
 <body>
   <div class="box">
     <h1>Welcome to My Server</h1>
     <p>このページは ALB → EC2 → nginx で配信されています。</p>
+    <p>このページを ご覧いただきありがとうございます。</p>
   </div>
 </body>
-
 </html>
 HTML
 EOF
