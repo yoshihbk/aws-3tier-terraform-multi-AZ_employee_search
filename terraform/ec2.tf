@@ -59,5 +59,5 @@ cat <<'HTML' > /usr/share/nginx/html/index.html
 </html>
 HTML
 EOF
-)
+  )
 }
