@@ -20,9 +20,9 @@ resource "aws_security_group" "rds_sg" {
 
   # RDS → 外部への通信（更新など）は許可
   egress {
-    from_port   = 0
-    to_port     = 0
-  # 全てのプロトコルを許可（RDSは複数のプロトコルを使用するため、-1で全てのプロトコルを指定）
+    from_port = 0
+    to_port   = 0
+    # 全てのプロトコルを許可（RDSは複数のプロトコルを使用するため、-1で全てのプロトコルを指定）
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
