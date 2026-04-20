@@ -11,6 +11,26 @@ Terraform によって IaC 化したものです。
   <img src="./diagrams/3tier-architecture-app.png" width="700">
 </p>
 
+## デプロイ手順（How to Deploy）
+
+本プロジェクトは Terraform により AWS 上へ自動デプロイできます。
+
+### 1. リポジトリのクローン
+git clone https://github.com/yourname/aws-3tier-terraform-multi-AZ_employee_search.git
+cd aws-3tier-terraform-multi-AZ_employee_search
+
+### 2. Terraform 初期化
+terraform init
+
+### 3. 構成の確認
+terraform plan
+
+### 4. デプロイ
+terraform apply
+
+### 5. アプリケーションへアクセス
+Terraform 実行後に出力される **ALB の DNS 名** にアクセスするとFlask 社員検索アプリが利用できます。
+
 ## 主な構成要素
 
 - **ALB（Application Load Balancer）**
