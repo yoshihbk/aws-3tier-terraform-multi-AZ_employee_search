@@ -20,8 +20,9 @@ Terraform によって IaC 化したものです。
   - Flask + nginx を実行
   - user_data により自動セットアップ
 
-- **RDS（MySQL, Multi-AZ）**
+- RDS（MySQL, Multi-AZ + Read Replica）
   - Primary：書き込み
+  - Standby：フェイルオーバー用（自動切替）
   - Read Replica：読み取り（社員検索クエリを実行）
 
 - **VPC（Public / Private Subnets, Multi-AZ）**
