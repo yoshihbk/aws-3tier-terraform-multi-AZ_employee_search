@@ -3,14 +3,14 @@
 # ---------------------------------------------------------
 resource "aws_db_instance" "mysql" {
   # RDS インスタンス名（AWS 上での識別子）
-  identifier        = "my-mysql"
+  identifier = "my-mysql"
 
   # DB エンジン設定
-  engine            = "mysql"
-  engine_version    = "8.0"
+  engine         = "mysql"
+  engine_version = "8.0"
 
   # インスタンススペック
-  instance_class    = "db.t3.micro"
+  instance_class = "db.t3.micro"
 
   # ストレージ容量（GB）
   allocated_storage = 20
@@ -24,8 +24,8 @@ resource "aws_db_instance" "mysql" {
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
 
   # セキュリティ設定
-  publicly_accessible = false   # パブリックアクセス禁止
-  multi_az            = true    # マルチ AZ（冗長化）
+  publicly_accessible = false # パブリックアクセス禁止
+  multi_az            = true  # マルチ AZ（冗長化）
 
   # 自動バックアップ保持期間（日）
   backup_retention_period = 7
