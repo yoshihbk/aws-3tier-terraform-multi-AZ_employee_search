@@ -8,7 +8,7 @@ Terraform によって IaC 化したものです。
 ## アーキテクチャ図
 
 <p align="center">
-  <img src="./diagrams/3tier-architecture-app.png" width="700">
+  <img src="./diagrams/aws-3tier-terraform-multi-AZ_employee_search.png" width="700">
 </p>
 
 ## デプロイ手順（How to Deploy）
