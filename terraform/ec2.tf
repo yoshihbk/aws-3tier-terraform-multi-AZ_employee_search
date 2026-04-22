@@ -4,21 +4,27 @@ resource "aws_launch_template" "web_lt" {
   # RDS が先に必要なので依存関係を明示
   depends_on = [aws_db_instance.database]
 
+  # Amazon Linux 2023
   image_id      = data.aws_ssm_parameter.al2023.value
   instance_type = "t2.micro"
 
+  # EC2 のセキュリティグループ
   vpc_security_group_ids = [
     aws_security_group.ec2_sg.id
   ]
 
+  # SSM で入れるように IAM ロール付与
   iam_instance_profile {
     name = aws_iam_instance_profile.ec2_ssm_profile.name
   }
 
-  # user_data は Terraform が展開しないように <<EOF（クォートなし）
+  # ---------------------------------------------------------
+  # user_data（Amazon Linux 2023 で確実に動く完全版）
+  # ---------------------------------------------------------
   user_data = base64encode(<<EOF
 #!/bin/bash
-set -eux
+# -e を外すことで、途中のコマンド失敗で user_data 全体が止まるのを防ぐ
+set -ux
 
 # ---------------------------------------------------------
 # OS アップデート
@@ -26,7 +32,9 @@ set -eux
 dnf update -y
 
 # ---------------------------------------------------------
-# Python / pip / MySQL / nginx
+# Python / pip / MySQL クライアント / nginx
+# Amazon Linux 2023 では mysql パッケージが無く、
+# mariadb105 が MySQL 互換クライアントとして提供される
 # ---------------------------------------------------------
 dnf install -y python3 python3-pip mariadb105 nginx
 
@@ -40,11 +48,11 @@ echo "DB_NAME=employees" >> /etc/environment
 source /etc/environment
 
 # ---------------------------------------------------------
-# RDS 起動待ち（MySQL が応答するまで待機）
-# Amazon Linux 2023 では nc が使えないため mysqladmin を使用
+# RDS 起動待ち
+# mysqladmin が無い環境があるため mysql -e で待つ
 # ---------------------------------------------------------
 echo "Waiting for RDS..."
-until mysqladmin ping -h "$DB_HOST" --silent; do
+until mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" -e "SELECT 1" >/dev/null 2>&1; do
   echo "RDS not ready..."
   sleep 5
 done
@@ -76,21 +84,12 @@ SQL
 # ---------------------------------------------------------
 mkdir -p /opt/flask_app
 
-echo "aW1wb3J0IG9zDQppbXBvcnQgbXlzcWwuY29ubmVjdG9yDQpmcm9tIGZsYXNrIGltcG9ydCBGbGFz
-aywgcmVxdWVzdA0KDQphcHAgPSBGbGFzayhfX25hbWVfXykNCg0KZGJfY29uZmlnID0gew0KICAg
-ICJob3N0Ijogb3MuZ2V0ZW52KCJEQl9IT1NUIiksDQogICAgInVzZXIiOiBvcy5nZXRlbnYoIkRC
-X1VTRVIiKSwNCiAgICAicGFzc3dvcmQiOiBvcy5nZXRlbnYoIkRCX1BBU1NXT1JEIiksDQogICAg
-ImRhdGFiYXNlIjogb3MuZ2V0ZW52KCJEQl9OQU1FIikNCn0NCg0KQGFwcC5yb3V0ZSgiLyIpDQpk
-ZWYgaW5kZXgoKToNCiAgICBuYW1lID0gcmVxdWVzdC5hcmdzLmdldCgibmFtZSIsICIiKQ0KICAg
-IGxpa2VfdmFsdWUgPSAiJSIgKyBuYW1lICsgIiUiDQogICAgY29ubiA9IG15c3FsLmNvbm5lY3Rv
-ci5jb25uZWN0KCoqZGJfY29uZmlnKQ0KICAgIGN1ciA9IGNvbm4uY3Vyc29yKCkNCiAgICBjdXIu
-ZXhlY3V0ZSgNCiAgICAgICAgIlNFTEVDVCBpZCwgbmFtZSwgZGVwYXJ0bWVudCBGUk9NIGVtcGxv
-eWVlcyBXSEVSRSBuYW1lIExJS0UgJXMiLA0KICAgICAgICAobGlrZV92YWx1ZSwpDQogICAgKQ0K
-ICAgIHJvd3MgPSBjdXIuZmV0Y2hhbGwoKQ0KICAgIGN1ci5jbG9zZSgpDQogICAgY29ubi5jbG9z
-ZSgpDQogICAgcmV0dXJuIHN0cihyb3dzKQ0KDQppZiBfX25hbWVfXyA9PSAiX19tYWluX18iOg0K
-ICAgIGFwcC5ydW4oaG9zdD0iMC4wLjAuMCIsIHBvcnQ9NTAwMCkNCg==
-" | base64 -d > /opt/flask_app/app.py
+# app/app.b64 を Terraform 側に置いておけばこれで展開できる
+echo "${file("app/app.b64")}" | base64 -d > /opt/flask_app/app.py
 
+# ---------------------------------------------------------
+# Flask / MySQL Connector インストール
+# ---------------------------------------------------------
 pip3 install flask mysql-connector-python
 
 # ---------------------------------------------------------
