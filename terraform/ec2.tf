@@ -40,15 +40,15 @@ echo "DB_NAME=employees" >> /etc/environment
 source /etc/environment
 
 # ---------------------------------------------------------
-# RDS 起動待ち（3306 が開くまで待機）
+# RDS 起動待ち（MySQL が応答するまで待機）
+# Amazon Linux 2023 では nc が使えないため mysqladmin を使用
 # ---------------------------------------------------------
 echo "Waiting for RDS..."
-until curl -s "http://$DB_HOST:3306" >/dev/null 2>&1; do
+until mysqladmin ping -h "$DB_HOST" --silent; do
   echo "RDS not ready..."
   sleep 5
 done
 echo "RDS is ready!"
-
 
 # ---------------------------------------------------------
 # DB / TABLE / 初期データ作成
@@ -76,7 +76,6 @@ SQL
 # ---------------------------------------------------------
 mkdir -p /opt/flask_app
 
-# app.py を Base64 から復元
 echo "aW1wb3J0IG9zDQppbXBvcnQgbXlzcWwuY29ubmVjdG9yDQpmcm9tIGZsYXNrIGltcG9ydCBGbGFz
 aywgcmVxdWVzdA0KDQphcHAgPSBGbGFzayhfX25hbWVfXykNCg0KZGJfY29uZmlnID0gew0KICAg
 ICJob3N0Ijogb3MuZ2V0ZW52KCJEQl9IT1NUIiksDQogICAgInVzZXIiOiBvcy5nZXRlbnYoIkRC
