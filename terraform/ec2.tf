@@ -2,7 +2,7 @@ resource "aws_launch_template" "web_lt" {
   name = "web-launch-template"
 
   # RDS が先に必要なので依存関係を明示
-  depends_on = [aws_db_instance.mysql]
+  depends_on = [aws_db_instance.database]
 
   image_id      = data.aws_ssm_parameter.al2023.value
   instance_type = "t2.micro"
@@ -33,7 +33,7 @@ dnf install -y python3 python3-pip mariadb105 nginx
 # ---------------------------------------------------------
 # RDS 接続情報（環境変数）
 # ---------------------------------------------------------
-echo "DB_HOST=${aws_db_instance.mysql.address}" >> /etc/environment
+echo "DB_HOST=${aws_db_instance.database.address}" >> /etc/environment
 echo "DB_USER=admin" >> /etc/environment
 echo "DB_PASSWORD=${var.db_password}" >> /etc/environment
 echo "DB_NAME=employees" >> /etc/environment
