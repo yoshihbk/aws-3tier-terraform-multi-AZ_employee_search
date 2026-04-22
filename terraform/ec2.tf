@@ -30,7 +30,7 @@ dnf install -y python3 python3-pip
 # ---------------------------------------------------------
 # RDS 接続情報（環境変数）
 # ---------------------------------------------------------
-echo "DB_HOST=${aws_db_instance.primary.address}" >> /etc/environment
+echo "DB_HOST=${aws_db_instance.mysql.address}" >> /etc/environment
 echo "DB_USER=admin" >> /etc/environment
 echo "DB_PASSWORD=${var.db_password}" >> /etc/environment
 echo "DB_NAME=employees" >> /etc/environment
@@ -59,7 +59,7 @@ def index():
     name = request.args.get("name", "")
     conn = mysql.connector.connect(**db_config)
     cur = conn.cursor()
-    cur.execute("SELECT id, name, department FROM employees WHERE name LIKE %s", (f"%{name}%",))
+    cur.execute("SELECT id, name, department FROM employees WHERE name LIKE %s", (f"%$${name}%",))
     rows = cur.fetchall()
     cur.close()
     conn.close()
