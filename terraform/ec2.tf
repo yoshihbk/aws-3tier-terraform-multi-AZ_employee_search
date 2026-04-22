@@ -1,6 +1,4 @@
-# ---------------------------------------------------------
 # Launch Template for EC2 (Web/App)
-# ---------------------------------------------------------
 resource "aws_launch_template" "web_lt" {
   name = "web-launch-template"
 
@@ -19,50 +17,103 @@ resource "aws_launch_template" "web_lt" {
 #!/bin/bash
 set -eux
 
-# --- 基本アップデート ---
+# ---------------------------------------------------------
+# 基本アップデート
+# ---------------------------------------------------------
 dnf update -y
 
-# --- nginx インストール ---
+# ---------------------------------------------------------
+# Python / pip
+# ---------------------------------------------------------
+dnf install -y python3 python3-pip
+
+# ---------------------------------------------------------
+# RDS 接続情報（環境変数）
+# ---------------------------------------------------------
+echo "DB_HOST=${aws_db_instance.primary.address}" >> /etc/environment
+echo "DB_USER=admin" >> /etc/environment
+echo "DB_PASSWORD=${var.db_password}" >> /etc/environment
+echo "DB_NAME=employees" >> /etc/environment
+
+# ---------------------------------------------------------
+# Flask アプリ配置
+# ---------------------------------------------------------
+mkdir -p /opt/flask_app
+
+cat << 'APP' > /opt/flask_app/app.py
+import os
+import mysql.connector
+from flask import Flask, request
+
+app = Flask(__name__)
+
+db_config = {
+    "host": os.getenv("DB_HOST"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "database": os.getenv("DB_NAME")
+}
+
+@app.route("/")
+def index():
+    name = request.args.get("name", "")
+    conn = mysql.connector.connect(**db_config)
+    cur = conn.cursor()
+    cur.execute("SELECT id, name, department FROM employees WHERE name LIKE %s", (f"%{name}%",))
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return str(rows)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+APP
+
+# ---------------------------------------------------------
+# requirements.txt
+# ---------------------------------------------------------
+cat << 'REQ' > /opt/flask_app/requirements.txt
+flask
+mysql-connector-python
+REQ
+
+pip3 install -r /opt/flask_app/requirements.txt
+
+# ---------------------------------------------------------
+# systemd（Flask）
+# ---------------------------------------------------------
+cat << 'SERVICE' > /etc/systemd/system/flask.service
+[Unit]
+Description=Flask App
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/opt/flask_app
+ExecStart=/usr/bin/python3 /opt/flask_app/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+systemctl enable --now flask
+
+# ---------------------------------------------------------
+# nginx（リバースプロキシ）
+# ---------------------------------------------------------
 dnf install -y nginx
-systemctl enable nginx
-systemctl start nginx
 
-# --- stress-ng（AL2023 は epel 不要） ---
-dnf install -y stress-ng
+cat << 'NGINX' > /etc/nginx/conf.d/flask.conf
+server {
+    listen 80;
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+    }
+}
+NGINX
 
-# --- CPU を常時稼働させる（2コア）---
-stress-ng --cpu 2 --timeout 0 &
-
-# --- Instance ID を取得 ---
-TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
--H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
--s http://169.254.169.254/latest/meta-data/instance-id)
-
-# --- Web ページ配置 ---
-cat <<HTML > /usr/share/nginx/html/index.html
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>My Web Server</title>
-  <style>
-    body { background: #f5f5f5; font-family: Arial; text-align: center; padding-top: 80px; }
-    h1 { color: #333; font-size: 40px; }
-    p { color: #666; font-size: 18px; }
-    .box { background: white; padding: 40px; margin: auto; width: 60%; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
-  </style>
-</head>
-<body>
-  <div class="box">
-    <h1>Welcome to My Server</h1>
-    <p>このページは ALB → EC2 → nginx で配信されています。</p>
-    <p>このページを ご覧いただきありがとうございます。</p>
-    <h1>Instance ID: $${INSTANCE_ID}</h1>
-  </div>
-</body>
-</html>
-HTML
+systemctl enable --now nginx
 EOF
   )
 }
