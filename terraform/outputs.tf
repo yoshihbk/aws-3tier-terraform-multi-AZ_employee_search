@@ -1,7 +1,4 @@
-# ---------------------------------------------------------
 # Outputs
-# ---------------------------------------------------------
-
 # ALB の DNS 名（ブラウザでアクセスするため）
 output "alb_dns_name" {
   value = aws_lb.alb.dns_name
@@ -23,7 +20,7 @@ output "launch_template_id" {
 # ---------------------------------------------------------
 output "rds_endpoint" {
   description = "RDS MySQL endpoint"
-  value       = aws_db_instance.mysql.address
+  value       = aws_db_instance.database.address
 }
 
 # ---------------------------------------------------------
@@ -32,5 +29,5 @@ output "rds_endpoint" {
 # ---------------------------------------------------------
 output "rds_port" {
   description = "RDS MySQL port"
-  value       = aws_db_instance.mysql.port
+  value       = aws_db_instance.database.port
 }
