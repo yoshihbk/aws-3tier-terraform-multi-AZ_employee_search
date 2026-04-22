@@ -101,6 +101,7 @@ Description=Flask App
 After=network.target
 
 [Service]
+EnvironmentFile=/etc/environment
 ExecStart=/usr/bin/python3 /opt/flask_app/app.py
 Restart=always
 
@@ -108,6 +109,7 @@ Restart=always
 WantedBy=multi-user.target
 SERVICE
 
+systemctl daemon-reload
 systemctl enable --now flask
 
 # ---------------------------------------------------------
