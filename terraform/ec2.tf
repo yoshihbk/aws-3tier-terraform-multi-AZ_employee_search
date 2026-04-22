@@ -43,11 +43,12 @@ source /etc/environment
 # RDS 起動待ち（3306 が開くまで待機）
 # ---------------------------------------------------------
 echo "Waiting for RDS..."
-until nc -z -w5 "$DB_HOST" 3306; do
+until curl -s "http://$DB_HOST:3306" >/dev/null 2>&1; do
   echo "RDS not ready..."
   sleep 5
 done
 echo "RDS is ready!"
+
 
 # ---------------------------------------------------------
 # DB / TABLE / 初期データ作成
