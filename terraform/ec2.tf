@@ -85,7 +85,7 @@ SQL
 mkdir -p /opt/flask_app
 
 # app/app.b64 を Terraform 側に置いておけばこれで展開できる
-echo "${file("app/app.b64")}" | base64 -d > /opt/flask_app/app.py
+echo "${file("../app/app.b64")}" | base64 -d > /opt/flask_app/app.py
 
 # ---------------------------------------------------------
 # Flask / MySQL Connector インストール
