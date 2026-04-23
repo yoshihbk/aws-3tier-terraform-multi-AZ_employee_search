@@ -21,6 +21,9 @@ resource "aws_launch_template" "web_lt" {
   # user_data を外部ファイル（user_data.sh）から読み込む
   # ---------------------------------------------------------
   user_data = base64encode(
-    templatefile("${path.module}/../app/user_data.sh", {})
+    templatefile("${path.module}/../app/user_data.sh", {
+      DB_HOST     = aws_db_instance.database.address
+      DB_PASSWORD = var.db_password
+    })
   )
 }
