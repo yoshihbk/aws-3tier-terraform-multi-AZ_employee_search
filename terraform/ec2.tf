@@ -24,6 +24,9 @@ resource "aws_launch_template" "web_lt" {
     templatefile("${path.module}/../app/user_data.sh", {
       DB_HOST     = aws_db_instance.database.address
       DB_PASSWORD = var.db_password
+
+      APP_PY     = file("${path.module}/../app/app.py")
+      INDEX_HTML = file("${path.module}/../app/templates/index.html")
     })
   )
 }
