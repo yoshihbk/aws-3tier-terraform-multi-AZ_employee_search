@@ -59,12 +59,12 @@ mkdir -p /opt/flask_app/templates
 
 # app.py 配置
 cat << 'EOF' > /opt/flask_app/app.py
-${file("${path.module}/../app/app.py")}
+${APP_PY}
 EOF
 
 # index.html 配置
 cat << 'EOF' > /opt/flask_app/templates/index.html
-${file("${path.module}/../app/templates/index.html")}
+${INDEX_HTML}
 EOF
 
 # ---------------------------------------------------------
