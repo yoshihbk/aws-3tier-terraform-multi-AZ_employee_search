@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>社員検索</title>
+    <style>
+        body { font-family: sans-serif; }
+        .container { width: 60%; margin: 40px auto; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #aaa;
+            padding: 10px;
+        }
+        th { background: #eee; }
+        input[type="text"] {
+            width: 200px;
+            padding: 6px;
+            font-size: 16px;
+        }
+        button {
+            padding: 6px 12px;
+            font-size: 16px;
+        }
+        .message {
+            color: red;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>社員検索</h2>
+
+        <form method="GET">
+            <input type="text" name="name" placeholder="名前で検索" value="{{ keyword }}">
+            <button type="submit">検索</button>
+        </form>
+
+        {% if message %}
+            <p class="message">{{ message }}</p>
+        {% endif %}
+
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>名前</th>
+                <th>部署</th>
+            </tr>
+            {% for emp in employees %}
+            <tr>
+                <td>{{ emp[0] }}</td>
+                <td>{{ emp[1] }}</td>
+                <td>{{ emp[2] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>
