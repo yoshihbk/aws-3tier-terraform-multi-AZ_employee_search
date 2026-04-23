@@ -4,9 +4,9 @@
 resource "aws_autoscaling_group" "web_asg" {
   # ASG の基本設定
   name                      = "web-asg"
-  max_size                  = 2
-  min_size                  = 1
-  desired_capacity          = 1
+  max_size                  = 4
+  min_size                  = 2
+  desired_capacity          = 2
   health_check_type         = "EC2"
   health_check_grace_period = 300
 
