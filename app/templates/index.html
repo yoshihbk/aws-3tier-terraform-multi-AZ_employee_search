@@ -1,50 +1,128 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <title>社員検索</title>
     <style>
-        body { font-family: sans-serif; }
-        .container { width: 60%; margin: 40px auto; }
+        body {
+            font-family: "Segoe UI", "Hiragino Sans", sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 70%;
+            margin: 60px auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            font-size: 28px;
+            margin-top: 0;
+            border-left: 6px solid #0078d7;
+            padding-left: 12px;
+            color: #333;
+        }
+
+        .search-area {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .search-area input[type="text"] {
+            flex: 1;
+            padding: 10px 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-area input[type="text"]:focus {
+            border-color: #0078d7;
+        }
+
+        .search-area button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #0078d7, #005bb5);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-area button:hover {
+            background: linear-gradient(135deg, #005bb5, #004a99);
+        }
+
+        .summary {
+            margin-top: 10px;
+            color: #666;
+            font-size: 15px;
+        }
+
         table {
-            border-collapse: collapse;
             width: 100%;
-            margin-top: 20px;
+            border-collapse: collapse;
+            margin-top: 25px;
+            font-size: 15px;
         }
-        th, td {
-            border: 1px solid #aaa;
-            padding: 10px;
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
         }
-        th { background: #eee; }
-        input[type="text"] {
-            width: 200px;
-            padding: 6px;
+
+        th {
+            background: #e9ecef;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .no-result {
+            margin-top: 25px;
+            color: #c00;
             font-size: 16px;
-        }
-        button {
-            padding: 6px 12px;
-            font-size: 16px;
-        }
-        .message {
-            color: red;
-            font-size: 18px;
-            margin-top: 20px;
+            font-weight: 500;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h2>社員検索</h2>
 
-        <form method="GET">
-            <input type="text" name="name" placeholder="名前で検索" value="{{ keyword }}">
+        <form method="GET" class="search-area">
+            <input type="text" name="name" placeholder="名前で検索" value="{{ name or '' }}">
             <button type="submit">検索</button>
         </form>
 
-        {% if message %}
-            <p class="message">{{ message }}</p>
+        {% if count is not none %}
+        <div class="summary">
+            {% if name %}
+            「{{ name }}」で {{ count }} 件ヒットしました。
+            {% else %}
+            全 {{ count }} 件の社員が登録されています。
+            {% endif %}
+        </div>
         {% endif %}
 
+        {% if employees and employees|length > 0 %}
         <table>
             <tr>
                 <th>ID</th>
@@ -59,6 +137,12 @@
             </tr>
             {% endfor %}
         </table>
+        {% else %}
+        <div class="no-result">
+            該当する社員は見つかりませんでした。
+        </div>
+        {% endif %}
     </div>
 </body>
+
 </html>
