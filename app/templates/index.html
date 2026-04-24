@@ -101,6 +101,28 @@
             font-size: 16px;
             font-weight: 500;
         }
+
+        .pagination a,
+        .pagination span {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            text-decoration: none;
+            color: #333;
+            background: #fff;
+        }
+
+        .pagination .disabled {
+            color: #999;
+            border-color: #eee;
+            background: #fafafa;
+        }
+
+        .pagination-info {
+            align-self: center;
+            color: #666;
+            padding: 8px 12px;
+        }
     </style>
 </head>
 
@@ -108,13 +130,13 @@
     <div class="container">
         <h2>社員検索</h2>
 
-        <form method="GET" class="search-area">
-            <input type="text" name="name" placeholder="名前で検索" value="{{ name or '' }}">
+        <form method="GET" class="search-area" aria-label="社員検索フォーム">
+            <input type="text" name="name" placeholder="名前で検索" value="{{ name or '' }}" aria-label="名前で検索">
             <button type="submit">検索</button>
         </form>
 
         {% if count is not none %}
-        <div class="summary">
+        <div class="summary" role="status" aria-live="polite">
             {% if name %}
             「{{ name }}」で {{ count }} 件ヒットしました。
             {% else %}
@@ -126,9 +148,9 @@
         {% if employees and employees|length > 0 %}
         <table>
             <tr>
-                <th>ID</th>
-                <th>名前</th>
-                <th>部署</th>
+                <th scope="col">ID</th>
+                <th scope="col">名前</th>
+                <th scope="col">部署</th>
             </tr>
             {% for emp in employees %}
             <tr>
@@ -138,6 +160,26 @@
             </tr>
             {% endfor %}
         </table>
+
+        {% if total_pages and total_pages > 1 %}
+        <nav aria-label="ページネーション" style="margin-top:16px;">
+            <ul class="pagination" style="list-style:none;display:flex;gap:8px;padding:0;margin:0;">
+                {% if page > 1 %}
+                <li><a href="?name={{ name|urlencode }}&page={{ page-1 }}">前へ</a></li>
+                {% else %}
+                <li><span class="disabled">前へ</span></li>
+                {% endif %}
+
+                <li class="pagination-info">{{ page }} / {{ total_pages }}</li>
+
+                {% if page < total_pages %} <li><a href="?name={{ name|urlencode }}&page={{ page+1 }}">次へ</a></li>
+                    {% else %}
+                    <li><span class="disabled">次へ</span></li>
+                    {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
         {% else %}
         <div class="no-result">
             該当する社員は見つかりませんでした。
