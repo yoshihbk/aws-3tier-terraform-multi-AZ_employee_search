@@ -5,10 +5,8 @@ from flask import Flask, request, render_template
 
 app = Flask(__name__)
 
-# 1ページあたりの件数
-PAGE_SIZE = 20
+PAGE_SIZE = 20  # 1ページあたりの件数
 
-# DB接続情報（環境変数から取得）
 db_config = {
     "host": os.getenv("DB_HOST"),
     "user": os.getenv("DB_USER"),
@@ -18,9 +16,7 @@ db_config = {
 
 
 def has_fulltext_index(conn):
-    """
-    employees.name に FULLTEXT INDEX があるか確認する関数
-    """
+    # employees テーブルに name の FULLTEXT があるか確認
     cur = conn.cursor()
     cur.execute("""
         SELECT COUNT(*) 
@@ -37,17 +33,7 @@ def has_fulltext_index(conn):
 
 @app.route("/", methods=["GET"])
 def index():
-    """
-    社員一覧ページ
-    - 検索あり：検索結果のみ表示
-    - 検索なし：全件表示
-    ※ 二重表示を防ぐため、employees は必ず1回だけ取得して1回だけ描画
-    """
-
-    # 検索ワード
     name = request.args.get("name", "").strip()
-
-    # ページ番号
     page = request.args.get("page", "1")
     try:
         page = max(1, int(page))
@@ -56,74 +42,48 @@ def index():
 
     offset = (page - 1) * PAGE_SIZE
 
-    # DB接続
     conn = mysql.connector.connect(**db_config)
     cur = conn.cursor()
 
-    # -----------------------------
-    # ① 検索ありの場合
-    # -----------------------------
+    # 検索あり/なしで SQL を切り替え（全文検索が使えるなら MATCH を優先）
     if name:
         if has_fulltext_index(conn):
-            # FULLTEXT検索（booleanモード）
+            # FULLTEXT がある場合（自然言語検索 or boolean）
+            # boolean モードで部分一致に近い検索も可能（例: +keyword*）
+            ft_query = "SELECT id, name, department FROM employees WHERE MATCH(name) AGAINST(%s IN BOOLEAN MODE) LIMIT %s OFFSET %s"
+            ft_count_q = "SELECT COUNT(*) FROM employees WHERE MATCH(name) AGAINST(%s IN BOOLEAN MODE)"
+            # boolean モード用の検索語（末尾ワイルドカード）
             ft_search = f"{name}*"
-
-            # 件数取得
-            cur.execute(
-                "SELECT COUNT(*) FROM employees WHERE MATCH(name) AGAINST(%s IN BOOLEAN MODE)",
-                (ft_search,)
-            )
+            cur.execute(ft_count_q, (ft_search,))
             total = cur.fetchone()[0]
-
-            # データ取得（email を必ず含める）
-            cur.execute(
-                "SELECT id, name, department, email FROM employees "
-                "WHERE MATCH(name) AGAINST(%s IN BOOLEAN MODE) "
-                "LIMIT %s OFFSET %s",
-                (ft_search, PAGE_SIZE, offset)
-            )
+            cur.execute(ft_query, (ft_search, PAGE_SIZE, offset))
             employees = cur.fetchall()
-
         else:
-            # LIKE検索
+            # FULLTEXT が無い場合は LIKE（フォールバック）
             like_value = "%" + name + "%"
-
             cur.execute(
-                "SELECT COUNT(*) FROM employees WHERE name LIKE %s",
-                (like_value,)
-            )
+                "SELECT COUNT(*) FROM employees WHERE name LIKE %s", (like_value,))
             total = cur.fetchone()[0]
-
             cur.execute(
-                "SELECT id, name, department, email FROM employees "
-                "WHERE name LIKE %s "
-                "LIMIT %s OFFSET %s",
+                "SELECT id, name, department FROM employees WHERE name LIKE %s LIMIT %s OFFSET %s",
                 (like_value, PAGE_SIZE, offset)
             )
             employees = cur.fetchall()
-
-    # -----------------------------
-    # ② 検索なし（全件表示）
-    # -----------------------------
     else:
+        # 検索なし：全件取得（ページネーション）
         cur.execute("SELECT COUNT(*) FROM employees")
         total = cur.fetchone()[0]
-
         cur.execute(
-            "SELECT id, name, department, email FROM employees "
-            "ORDER BY id LIMIT %s OFFSET %s",
+            "SELECT id, name, department FROM employees ORDER BY id LIMIT %s OFFSET %s",
             (PAGE_SIZE, offset)
         )
         employees = cur.fetchall()
 
-    # DBクローズ
     cur.close()
     conn.close()
 
-    # 総ページ数
     total_pages = max(1, math.ceil(total / PAGE_SIZE))
 
-    # index.html に employees を1回だけ渡す
     return render_template(
         "index.html",
         employees=employees,
