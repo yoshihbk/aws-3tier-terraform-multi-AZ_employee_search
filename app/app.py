@@ -50,7 +50,7 @@ def index():
         if has_fulltext_index(conn):
             # FULLTEXT がある場合（自然言語検索 or boolean）
             # boolean モードで部分一致に近い検索も可能（例: +keyword*）
-            ft_query = "SELECT id, name, department FROM employees WHERE MATCH(name) AGAINST(%s IN BOOLEAN MODE) LIMIT %s OFFSET %s"
+            ft_query = "SELECT id, name, department, email FROM employees WHERE MATCH(name) AGAINST(%s IN BOOLEAN MODE) LIMIT %s OFFSET %s"
             ft_count_q = "SELECT COUNT(*) FROM employees WHERE MATCH(name) AGAINST(%s IN BOOLEAN MODE)"
             # boolean モード用の検索語（末尾ワイルドカード）
             ft_search = f"{name}*"
@@ -65,7 +65,7 @@ def index():
                 "SELECT COUNT(*) FROM employees WHERE name LIKE %s", (like_value,))
             total = cur.fetchone()[0]
             cur.execute(
-                "SELECT id, name, department FROM employees WHERE name LIKE %s LIMIT %s OFFSET %s",
+                "SELECT id, name, department, email FROM employees WHERE name LIKE %s LIMIT %s OFFSET %s",
                 (like_value, PAGE_SIZE, offset)
             )
             employees = cur.fetchall()
@@ -74,7 +74,7 @@ def index():
         cur.execute("SELECT COUNT(*) FROM employees")
         total = cur.fetchone()[0]
         cur.execute(
-            "SELECT id, name, department FROM employees ORDER BY id LIMIT %s OFFSET %s",
+            "SELECT id, name, department, email FROM employees ORDER BY id LIMIT %s OFFSET %s",
             (PAGE_SIZE, offset)
         )
         employees = cur.fetchall()
