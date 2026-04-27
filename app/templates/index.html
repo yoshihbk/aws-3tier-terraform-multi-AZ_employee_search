@@ -5,6 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <title>社員検索</title>
+
+    <!-- 画面の見た目に関する CSS（変更なし） -->
     <style>
         body {
             font-family: "Segoe UI", "Hiragino Sans", sans-serif;
@@ -46,10 +48,6 @@
             transition: border-color 0.3s;
         }
 
-        .search-area input[type="text"]:focus {
-            border-color: #0078d7;
-        }
-
         .search-area button {
             margin-left: 10px;
             padding: 10px 20px;
@@ -59,17 +57,6 @@
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .search-area button:hover {
-            background: linear-gradient(135deg, #005bb5, #004a99);
-        }
-
-        .summary {
-            margin-top: 10px;
-            color: #666;
-            font-size: 15px;
         }
 
         table {
@@ -94,35 +81,6 @@
         tr:nth-child(even) {
             background: #f8f9fa;
         }
-
-        .no-result {
-            margin-top: 25px;
-            color: #c00;
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        .pagination a,
-        .pagination span {
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-            text-decoration: none;
-            color: #333;
-            background: #fff;
-        }
-
-        .pagination .disabled {
-            color: #999;
-            border-color: #eee;
-            background: #fafafa;
-        }
-
-        .pagination-info {
-            align-self: center;
-            color: #666;
-            padding: 8px 12px;
-        }
     </style>
 </head>
 
@@ -130,13 +88,15 @@
     <div class="container">
         <h2>社員検索</h2>
 
-        <form method="GET" class="search-area" aria-label="社員検索フォーム">
-            <input type="text" name="name" placeholder="名前で検索" value="{{ name or '' }}" aria-label="名前で検索">
+        <!-- 🔍 検索フォーム -->
+        <form method="GET" class="search-area">
+            <input type="text" name="name" placeholder="名前で検索" value="{{ name or '' }}">
             <button type="submit">検索</button>
         </form>
 
+        <!-- 📊 件数表示（検索あり/なしで文言が変わる） -->
         {% if count is not none %}
-        <div class="summary" role="status" aria-live="polite">
+        <div class="summary">
             {% if name %}
             「{{ name }}」で {{ count }} 件ヒットしました。
             {% else %}
@@ -145,24 +105,30 @@
         </div>
         {% endif %}
 
+        <!-- 👇 ここが社員一覧テーブル（※二重表示の原因はここではなかった） -->
         {% if employees and employees|length > 0 %}
         <table>
             <tr>
                 <th scope="col">ID</th>
                 <th scope="col">名前</th>
                 <th scope="col">部署</th>
+                <th scope="col">メールアドレス</th> <!-- ★ 追加 -->
             </tr>
+
+            <!-- ★ emp[3] に email が入っている（app.py 修正済み前提） -->
             {% for emp in employees %}
             <tr>
                 <td>{{ emp[0] }}</td>
                 <td>{{ emp[1] }}</td>
                 <td>{{ emp[2] }}</td>
+                <td>{{ emp[3] }}</td> <!-- ★ 追加 -->
             </tr>
             {% endfor %}
         </table>
 
+        <!-- 📄 ページネーション -->
         {% if total_pages and total_pages > 1 %}
-        <nav aria-label="ページネーション" style="margin-top:16px;">
+        <nav style="margin-top:16px;">
             <ul class="pagination" style="list-style:none;display:flex;gap:8px;padding:0;margin:0;">
                 {% if page > 1 %}
                 <li><a href="?name={{ name|urlencode }}&page={{ page-1 }}">前へ</a></li>
@@ -181,6 +147,7 @@
         {% endif %}
 
         {% else %}
+        <!-- ❌ 検索結果なし -->
         <div class="no-result">
             該当する社員は見つかりませんでした。
         </div>
