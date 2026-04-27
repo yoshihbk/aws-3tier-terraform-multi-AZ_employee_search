@@ -40,15 +40,18 @@ USE employees;
 CREATE TABLE IF NOT EXISTS employees (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100),
-  department VARCHAR(100)
+  department VARCHAR(100),
+  email VARCHAR(255),
+  UNIQUE KEY uniq_employee (name, department, email)
 );
 
-INSERT INTO employees (name, department) VALUES
-('山田太郎','営業'),
-('佐藤花子','総務'),
-('鈴木一郎','IT'),
-('田中健','人事'),
-('高橋優','経理');
+INSERT IGNORE INTO employees (name, department, email) VALUES
+('山田太郎','営業', 'taro@example.com'),
+('佐藤花子','総務', 'hanako@example.com'),
+('鈴木一郎','IT', 'ichiro@example.com'),
+('田中健','人事', 'ken@example.com'),
+('高橋優','経理', 'yu@example.com');
+
 SQL
 
 # ---------------------------------------------------------
