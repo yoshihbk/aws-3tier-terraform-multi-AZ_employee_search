@@ -10,7 +10,7 @@
 本アプリケーションは以下の 3 層で構成されています。
 
 - **Presentation Layer（Public Subnet）**
-  - Application Load Balancer（ALB）
+  - Application Load Balancer（HTTP）
 
 - **Application Layer（Private Subnet）**
   - EC2（Flask App Server, Auto Scaling Group）
@@ -75,15 +75,15 @@ AWS Well-Architected Framework でも Private Subnet 配置が推奨されてい
 ---
 
 ## 4. Application Load Balancer（ALB）
-
-- Public Subnet に配置
-- HTTP/HTTPS リクエストを Private Subnet の EC2 にルーティング
-- ヘルスチェックにより ASG のインスタンスを監視
-- スケールアウト時も自動でターゲット登録される
+Public Subnet に配置
+HTTP（80番）リクエストのみ を Private Subnet の EC2 にルーティング
+ヘルスチェックにより ASG のインスタンスを監視
+スケールアウト時も自動でターゲット登録される
 
 **採用理由：**
-- 外部公開は ALB のみとし、EC2 を非公開化することでセキュリティを強化
-- ASG と組み合わせて高可用性を実現
+外部公開は ALB のみとし、EC2 を非公開化することでセキュリティを強化
+ASG と組み合わせて高可用性を実現
+今回は学習目的のため HTTP のみを使用（本番では HTTPS が推奨）
 
 ---
 
@@ -123,14 +123,12 @@ AWS Well-Architected Framework でも Private Subnet 配置が推奨されてい
 
 ## 7. Security Group 設計
 
-- **ALB SG → EC2 SG**
-  ALB からの HTTP/HTTPS のみ許可
-
-- **EC2 SG → RDS SG**
-  EC2 からの MySQL（3306）のみ許可
-
-- **RDS SG**
-  外部からの直接アクセスは不可
+ALB SG → EC2 SG
+ALB からの HTTP（80番） のみ許可
+EC2 SG → RDS SG
+EC2 からの MySQL（3306）のみ許可
+RDS SG
+外部からの直接アクセスは不可
 
 **採用理由：**
 最小権限の原則（Least Privilege）に基づき、
